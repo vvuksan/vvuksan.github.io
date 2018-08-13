@@ -1,0 +1,44 @@
+<p>This post will deal with helping you use the data you already have to do alerting. It is most helpful for people running Nagios or it’s variants such as Icinga, Netreo etc. It could likely be used with other decoupled alerting systems (not Zabbix or Zenoss though since they do their own trending).</p>
+
+<p>Recently I came to a realization that lots of sysadmins are unaware that they could easily use trending data they already capture with systems such as Ganglia, Graphite, Collectd, Munin etc. to do alerting. Standard way of doing health checks of remote nodes in Nagios is to install the <a href="http://exchange.nagios.org/directory/Addons/Monitoring-Agents/NRPE-%252D-Nagios-Remote-Plugin-Executor/details">Nagios Remote Plugin Executor aka. NRPE</a> which allows you to execute Nagios plugins on remote nodes and pipe output to the Nagios server. NRPE does the job however has three major disadvantages</p>
+
+<ol>
+  <li>
+    <p>It is another daemon that needs to run on the remote host possibly introducing security concerns</p>
+  </li>
+  <li>
+    <p>Depending on the load of the machine can be slow thus bogging down the Nagios server</p>
+  </li>
+  <li>
+    <p>Last and most important is that commonly it’s used to alert on common metrics such as disk, load, CPU, swap which you should be trending anyways.</p>
+  </li>
+</ol>
+
+<p>Instead what you ought to be doing is use trending data for alerting. I can think of at least 4 reasons to do so</p>
+
+<ol>
+  <li>
+    <p>You may already be collecting pertinent data ie. system load, swap, CPU utilization</p>
+  </li>
+  <li>
+    <p>If you are alerting on a particular metric you should likely be trending it</p>
+  </li>
+  <li>
+    <p>It’s fast</p>
+  </li>
+  <li>
+    <p>Allows you to do more sophisticated checks easily ie. alert me if more than 5 hosts have a load greater than 5 etc.</p>
+  </li>
+</ol>
+
+<p>Years ago I used Ganglia Web PHP code to write my own generic <a href="http://vuksan.com/linux/nagios_scripts.html#check_ganglia_metrics">Nagios Ganglia plugin</a>. This has served me well. Most recently <a href="Michael Conigliaro">Michael Conigliaro</a> rewrote the script in Python making it more versatile and more powerful. You can download it from here</p>
+
+<p><a href="https://github.com/ganglia/ganglia_contrib/tree/master/nagios">https://github.com/ganglia/ganglia_contrib/tree/master/nagios</a></p>
+
+<p>In a nutshell what it does is download the whole metrics tree ie. list of all hosts with their associated metrics. Caches it for a configurable amount of time then uses <a href="http://packages.python.org/NagAconda/plugin.html">NagAconda</a> to support all the threshold reporting as defined in <a href="http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT">Nagios developer guidelines</a>.</p>
+
+<p>Another alternative if you have a very large site is Ganglios which was opensourced by guys at Linden Lab. Their problem is/was that they have thousands of hosts and downloading the whole metrics tree takes ~15 seconds so they have separated the logic that downloads the metric tree and one that does alerting. You can download Ganglios from</p>
+
+<p><a href="https://bitbucket.org/maplebed/ganglios">https://bitbucket.org/maplebed/ganglios</a></p>
+
+<p>This can easily be adapted to work with your trending system of choice.</p>

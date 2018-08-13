@@ -1,0 +1,16 @@
+<p>Recently I downloaded RedHat 6 Enteprise beta (RHEL6). I wanted to install it as a Xen guest (DomU) on top of an existing Centos 5 Xen host. Unfortunately it did not work out of the box. I ran</p>
+
+<pre><code>virt-install --prompt
+</code></pre>
+
+<p>on the Xen host which let me install RHEL6 however when the install rebooted I was greeted with this error message</p>
+
+<pre><code>fs = fsimage.open(file, get_fs_offset(file))
+IOError: [Errno 95] Operation not supported
+</code></pre>
+
+<p>Fortunately ﻿Karanbir Singh had a blog post about this at</p>
+
+<p><a href="http://www.karan.org/blog/index.php/2010/04/28/rhel6-xen-domu-on-a-centos-5-dom0#c5274">http://www.karan.org/blog/index.php/2010/04/28/rhel6-xen-domu-on-a-centos-5-dom0</a></p>
+
+<p>Differences I found were that I had to make the root partition an ext2 filesystem as well. Also I found out that I couldn’t review the partition layout if I ran the installation in the text mode. I had to use VNC to be able to set proper partition types.</p>

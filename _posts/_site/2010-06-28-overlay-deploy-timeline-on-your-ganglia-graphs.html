@@ -1,0 +1,52 @@
+<p>Don’t you sometimes wish you could have a visual indicator of when code has been deployed in production. Something like this :-)</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/06/deploy_timeline.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/06/deploy_timeline.png" alt="Shows deploy time line on a load graph" /></a></p>
+
+<p>This is how you can add deploy timeline to your Ganglia graphs or for that matter to any tool that uses RRDs such as Cacti, Munin, Collectd etc.</p>
+
+<h3 id="background">Background</h3>
+
+<p>RRDtool supports so called <a href="http://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html">VRULEs</a> which are</p>
+
+<h4 id="vruletimecolorlegenddashesonsoffsonsoffsdash-offsetoffsethttpossoetikerchrrdtooldocrrdgraphgraphenhtmltop"><a href="http://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html#___top"><strong>VRULE</strong><strong>:</strong><em>time</em><strong>#</strong><em>color</em>[<strong>:</strong><em>legend</em>][<strong>:dashes</strong>[<strong>=</strong><em>on_s</em>[,<em>off_s</em>[,<em>on_s</em>,<em>off_s</em>]…]][<strong>:dash-offset=</strong><em>offset</em>]]</a></h4>
+
+<p>Draw a vertical line at <em>time</em>. Its color is composed from three hexadecimal numbers specifying the rgb color components (00 is off, FF is maximum) red, green and blue followed by an optional alpha. Optionally, a legend box and string is printed in the legend section. <em>time</em> may be a number or a variable from a <strong>VDEF</strong>. It is an error to use _vname_s from <strong>DEF</strong> or <strong>CDEF</strong> here. Dashed lines can be drawn using the <strong>dashes</strong> modifier. See <strong>LINE</strong> for more details.</p>
+
+<p>What we want to do is add a VRULE for each deployment. For example those three lines above have been generated using these VRULEs</p>
+
+<p>VRULE:1277731886#FF00FF:”Deploys” VRULE:1277721886#FF00FF VRULE:1277711886#FF00FF</p>
+
+<h3 id="implementation">Implementation</h3>
+
+<p>Easiest way to add these to Ganglia is to modify graph.php in Ganglia Web. You need to look for following two lines at the end of the file</p>
+
+<pre><code>$command .=  array_key_exists('extras', $rrdtool_graph) ? ' '.$rrdtool_graph['extras'].' ' : '';
+$command .=  " $rrdtool_graph[series]";
+</code></pre>
+
+<p>Then append your own VRULEs ie.</p>
+
+<pre><code>$command .= " VRULE:" . $time . "#FF00FF:\"Deploys\"";
+</code></pre>
+
+<p>Obviously you have to pull in the $time info from where you keep track of your deploy times. You can also get creative by using different colors for different deploys, change legend labels, add VRULEs to only certain graphs ie. load, CPU etc. This is a quick and dirty way to do it</p>
+
+<pre><code>$deploy_times = array(1278082860,1279393200);
+foreach ( $deploy_times as $key =&gt; $time ) {
+  # Put deploys label only once.
+  if ( $key == 0 )
+     $command .= " VRULE:" . $time . "#FF00FF:\"Deploys\"";
+  else
+     $command .= " VRULE:" . $time . "#FF00FF";
+}
+</code></pre>
+
+<p>Now you just have to make sure you append deploy times in the array.</p>
+
+<h3 id="alternate-implementations">Alternate implementations</h3>
+
+<p>Alternate implementation is to create a RRD file whenever you do deploys then overlay that graph on top of an existing graph. Trouble is you have to worry about scaling the graph. Never could get it quite right.</p>
+
+<h3 id="credit">Credit</h3>
+
+<p>Thanks goes to the <a href="http://circonus.com/">Circonus</a> guys :-) since they made me think of vertical lines instead of trying the RRD overlay. Also thanks to <a href="https://twitter.com/toredash">@toredash</a> for pointing me in the right RRDtool direction by suggesting HRULE.</p>

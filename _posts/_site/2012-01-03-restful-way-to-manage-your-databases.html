@@ -1,0 +1,53 @@
+<p>I have a need in my development environment to easily create/drop mySQL databases and users. Initially I was gonna implement a simple hacky HTTP GET method but was dissuaded by <a href="https://twitter.com/b6n">Ben Black </a>from doing so. He suggested I write a proper RESTful interface. Without further ado I present to you dbrestadmin</p>
+
+<p><a href="https://github.com/vvuksan/dbrestadmin">https://github.com/vvuksan/dbrestadmin</a></p>
+
+<p>It is my first foray into writing RESTful services so things may be rough around the edges. However it allows you to do following</p>
+
+<ul>
+  <li>
+    <p>manage multiple database servers</p>
+  </li>
+  <li>
+    <p>create/drop databases</p>
+  </li>
+  <li>
+    <p>list databases</p>
+  </li>
+  <li>
+    <p>create/drop users</p>
+  </li>
+  <li>
+    <p>list users</p>
+  </li>
+  <li>
+    <p>give user grants</p>
+  </li>
+  <li>
+    <p>view grants given to the user</p>
+  </li>
+  <li>
+    <p>view database privileges on a particular database given to a user</p>
+  </li>
+</ul>
+
+<p>For example need to create a database called testdb on dbserver ID=0 use this cURL command</p>
+
+<pre><code>curl -X POST http://myhost/dbrestadmin/v1/databases/0/dbs/testdb
+</code></pre>
+
+<p>Create a user test2 with password test</p>
+
+<pre><code>curl -X POST "http://localhost:8000/dbrestadmin/v1/databases/0/users/test2@localhost" -d "password=test"
+</code></pre>
+
+<p>Give test2 user all privileges on testdb</p>
+
+<pre><code>curl -X POST "http://localhost:8000/dbrestadmin/databases/0/users/test2@'localhost'/grants" -d "grants=all privileges&amp;database=testdb"
+</code></pre>
+
+<p>There is more. You can see all of the methods here</p>
+
+<p><a href="https://github.com/vvuksan/dbrestadmin/blob/master/API.md">https://github.com/vvuksan/dbrestadmin/blob/master/API.md</a></p>
+
+<p>Improvements and constructive criticism welcome</p>

@@ -1,0 +1,9 @@
+<p>This is a quick way to extract a 15 minute average of a metric in Ganglia. It utilizes Ganglia’s CSV export function to get the values then uses awk to actually compute the average.</p>
+
+<p>First of all find a metric graph you want to calculate average from. Right click over the image and copy the image location. Then append &amp;csv=1 to the URL and UNIX time stamp from 15 minutes ago and put that as the &amp;cs= argument. This is a simple shell script that illustrates it</p>
+
+<pre><code>MIN15AGO=`date --date="15 minutes ago" "+%s" ; 
+curl --silent "http://ganglia.domain.com/ganglia/graph.php?c=NetApp&amp;h=host1&amp;v=&amp;m=netapp_cpuutil&amp;&lt;span style="color: #ff0000;"&gt;cs=$MIN15AGO&amp;csv=1&lt;/span&gt;" | \
+   awk -F, '{sum+=$2} END { print "Average = ",sum/NR}'
+</code></pre>
+

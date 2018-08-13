@@ -1,0 +1,134 @@
+<p>There has been quite a bit of discussion about Devops and what it means. <a href="http://twitter.com/blueben/status/11720129187">@blueben</a> has suggested we start a Devops patterns cookbook so people can learn what worked or didn’t work. This is the description of the environment we implemented at a previous job. Some of these things may or may not work for you. I will try to keep it short.</p>
+
+<h3 id="environment-background">Environment background</h3>
+
+<p>7 distinct applications/products that had to be deployed and tested ie. base/core application, messaging platform, reporting app etc. All applications were Java based running on either Tomcat or Jboss.</p>
+
+<h3 id="application-design-for-deployment">Application design for deployment</h3>
+
+<p>These are some of the key points</p>
+
+<ol>
+  <li>
+    <p>Application should have a sane 	default configuration options. Any option should be overrideable by 	an external file. In most cases you only need to 	override database credentials (host, username, password). Goal is to be able to use the same binary across multiple environments.</p>
+  </li>
+  <li>
+    <p>Application should expose key internal metrics. We 	for instance asked for a simple key/value pairs web page ie.   	JMSenqueue=OK etc. This is important because there are lots 	of things that can break inside the application which external 	monitoring may miss like JMS message can’t be enqueued, etc.</p>
+  </li>
+  <li>
+    <p>Keep release notes actions to a minimum. Release notes are often not followed or partially followed thus make sure point 1. is followed and/or try to automate everything else.</p>
+  </li>
+</ol>
+
+<h3 id="continuous-integration">Continuous Integration</h3>
+
+<p>We used CruiseControl for Continuous Integration. It was used solely to make sure that someone didn’t break the build.</p>
+
+<h3 id="creating-releases">Creating releases</h3>
+
+<p>Developers are in charge of building and packaging releases. This primarily because QA or Ops will not know what to do if a build fails (this is Java remember). Each release has to be clearly labeled with the version and tagged in the repository. For example Location 1.1.5 will be packaged as location-1.1.5.tar.gz. Archives should contain only WAR (Tomcat) or EAR (Jboss) files and DB patch files. Releases are to be deposited into an appropriate file share ie. /share/releases/location.</p>
+
+<h3 id="deployment">Deployment</h3>
+
+<p>In order to eliminate most manual deployment steps and support all the different applications we decided to write our own deployment tool. First we started off with a data model which roughly broke down to</p>
+
+<ol>
+  <li>
+    <p>Applications – can use different 	app server containers ie. Tomcat/JBoss,  may/will have configuration 	files that can be either key/value pairs or templates. For every 	application we also specified a start and stop script (hotdeploy was 	not an option due to bad experiences with our code).</p>
+  </li>
+  <li>
+    <p>Domains/Customers – we wanted a 	single Dashboard that would allow us to deploy to multiple 	environments e.g. QA staging (current release), QA development (next 	scheduled release), Dev playbox, etc. Each of these domains had 	their own set of applications they could deploy with their own 	configuration options</p>
+  </li>
+</ol>
+
+<p>First we wrote a command line tool that was capable of doing something like this</p>
+
+<pre><code>$ deployer –version 1.2.5 –server web10 –domain joedev –app base –action deploy&lt;span style="font-family: Georgia, 'Times New Roman', 'Bitstream Charter', Times, serif; line-height: 19px; white-space: normal; font-size: 13px;"&gt; &lt;/span&gt;
+</code></pre>
+
+<p>What this would do is</p>
+
+<ol>
+  <li>
+    <p>Find and unpack the proper app 	server container e.g. jboss-4.2.3.tar.gz</p>
+  </li>
+  <li>
+    <p>Overlay WAR/EAR files for the name 	version e.g. base-1.2.5.tar.gz</p>
+  </li>
+  <li>
+    <p>Build configuration files and 	scripts</p>
+  </li>
+  <li>
+    <p>Stop the server on the remote box 	(if it’s running)</p>
+  </li>
+  <li>
+    <p>Rsync the contents of the packaged release</p>
+  </li>
+  <li>
+    <p>Make sure Apache AJP proxy is 	configured to proxy traffic and do Apache reload</p>
+  </li>
+  <li>
+    <p>Start up the server</p>
+  </li>
+</ol>
+
+<p>One of the main reason we started off with a command line tool is that we could easily write batch scripts to upgrade whole set of machines. This was borne out of pain of having to upgrade 200 instances via a web GUI at another job.</p>
+
+<p>Once deployer was working we wrote a web GUI that interfaced with it. You could do things like View running config (what config options are actually on the appserver), Stop, Restart, Deploy (particular version), Reconfig (apply config changes) and Undeploy. We also added the ability to change or add configuration options to the application specific override files. Picture is worth thousand words. This is a tiny snippet how it approximately looked for one domain</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/04/deployer-11.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/04/deployer-11.png" alt="" /></a></p>
+
+<p>This was a big win since QA or developers no longer needed to have someone from ops deploy software.</p>
+
+<h3 id="db-patching">DB patching</h3>
+
+<p>Another big win was “automated” DB patching. Every application would have a table called Patch with a list of DB patches that were already applied. We also agreed that every app would have dbpatches directory in the app archive which would contain a list of patches named with version and order in which they should be applied e.g.</p>
+
+<ul>
+  <li>
+    <p>2.54.01-addUserColumn.sql</p>
+  </li>
+  <li>
+    <p>2.54.02-dropUidColumn.sql</p>
+  </li>
+</ul>
+
+<p>During deployment startup script would compare contents of the patch table and a list of dbpatches and apply any missing ones. If the patch script failed e-mail would be sent to the QA or dev in charge of particular domain.</p>
+
+<p>A slightly modified process was used in production to try to reduce down time ie. things like adding a column could be done at any time. Automated process was largely there to make QA’s job easier.</p>
+
+<h3 id="qa-and-testing">QA and testing</h3>
+
+<p>When a release was ready QA would deploy the release themselves. If there was a deployment problem they would attempt to troubleshoot it themselves then contact the appropriate person. Most of the times it was an app problem ie. particular library didn’t get commited etc. This was a huge win since we avoided a lots of “waterfall” problems by allowing QA to self-service themselves.</p>
+
+<h3 id="production">Production</h3>
+
+<p>Production environment was strictly controlled. Only ops and couple key engineers had access to it. Reason was we tried to keep the environment as stable as possible. Thus ad hoc changes were frowned upon. If you needed to make a change you would either have to commit a change into the configuration management system (puppet) or use the deployment tool.</p>
+
+<h3 id="production-deployment">Production deployment</h3>
+
+<p>The day before the release QA would open up a ticket listing all the applications and versions that needed to be deployed. On the morning of the deployment (that was our low time) someone from ops, development and whole QA team engaged in deploying the app and resolving any observed issues.</p>
+
+<h3 id="monitoring">Monitoring</h3>
+
+<p>Regular metrics such as CPU utilization, load etc. were collected. In addition we kept track of internal metrics and set up adequate alerts. This is an ongoing process since over time you discover what your key metrics are and what their thresholds are ie. number of threads, number of JDBC connections etc.</p>
+
+<h3 id="things-that-didnt-work-so-well-or-were-challenging">Things that didn’t work so well or were challenging</h3>
+
+<ol>
+  <li>
+    <p>One of the toughest parts was 	getting developers’ attention to add “goodies” for ops. 	Specifically exposing application internals was often put off until 	eventually we would have an outage and lack of having the metric 	resulted in extended outage.</p>
+  </li>
+  <li>
+    <p>Deployment tool took couple tries 	to get right. Even as it was there were couple things I would have 	done differently ie. not relying on a relational database for the 	data model since it made it difficult to create diffs (you had to 	dump the whole DB). I’d likely go with JSON so that diffs could be easily reviewed and committed.</p>
+  </li>
+  <li>
+    <p>Other issues I can’t recall right now :-)</p>
+  </li>
+</ol>
+
+<h3 id="wrapup">Wrapup</h3>
+
+<p>This is the shortest description I could write. There are a number of things I glossed over and omitted so that this is not too long. I may write about those on another occasion. Perhaps the key take away should be that Ops should focus on developing tools that either automate things or allow its customers (QA, dev, technical support, etc.) to self-service themselves.</p>
+
+<p><strong>Update</strong>: There is a <a href="http://blog.vuksan.com/2010/05/27/devops-homebrew-part-deux/">second part to this posts</a></p>

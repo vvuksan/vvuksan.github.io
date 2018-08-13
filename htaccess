@@ -1,0 +1,15 @@
+RewriteEngine On
+# Map http://henrik.nyh.se to /blog.
+RewriteRule ^$ /blog/ [L]
+
+# Map http://henrik.nyh.se/x to /blog/x unless there is a x in the web root.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/blog/
+RewriteRule ^(.*)$  /blog/$1
+
+# Add trailing slash to directories without them so DirectoryIndex works.
+# This does not expose the internal URL.
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_FILENAME} !/$
+RewriteRule ^(.*)$  $1/

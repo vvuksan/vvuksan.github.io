@@ -1,0 +1,80 @@
+<p>I have blogged about in the past about some of the ways you can monitor your web site performance e.g how to <a href="http://blog.vuksan.com/2010/01/15/monitoring-your-site-via-90th-percentile-response-time/">monitor your site using 90th percentile response times</a>, <a href="http://blog.vuksan.com/2010/06/05/beauty-of-aggregate-line-graphs/">beauty of aggregate line graphs</a> and <a href="http://blog.vuksan.com/2010/04/20/tracking-web-clients-in-real-time/">tracking web clients in real time</a>.</p>
+
+<p>Most recently we wanted to get better insight into how our site and more specifically backend is performing. We wanted a tool that could provide us with per URL/page metrics such as</p>
+
+<ul>
+  <li>
+    <p>total number of requests</p>
+  </li>
+  <li>
+    <p>aggregate compute time</p>
+  </li>
+  <li>
+    <p>average request time</p>
+  </li>
+  <li>
+    <p>90th percentile time (you can find more explanation what it means at <a href="http://blog.vuksan.com/2010/01/15/monitoring-your-site-via-90th-percentile-response-time/">monitor your site using 90th percentile response times</a>) - this eliminates most of the really slow response times that may really affect your averages</p>
+  </li>
+</ul>
+
+<p>Initial plan was to build a basic set of reports to tell us what are the pages with excessive response times or large total (aggregate) compute times. Next and yet to be implemented portion was to be able to analyze data in real time so that we’d have another data point to use in troubleshooting in case there is a site slow down.</p>
+
+<p>Basic requirements for the tool were these</p>
+
+<ul>
+  <li>
+    <p>Capable of crunching 100+ million daily entries</p>
+  </li>
+  <li>
+    <p>Real-time analysis</p>
+  </li>
+  <li>
+    <p>Produce multiple metrics with potential to add more down the line</p>
+  </li>
+  <li>
+    <p>Low footprint</p>
+  </li>
+</ul>
+
+<p>An obvious way to do this is to store all data in a heavy duty data store like a relational/SQL database or something MapReduce capable. Trouble is we may be doing in logging in excess of 3,000 hits per second (all dynamic content as static assets are served from the CDN). Doing that many inserts per second on a SQL-type database will be tricky unless you have powerful hardware. Next obvious problem is to scan through hundreds of millions or billions of rows will be slow even if I use MapReduce unless of course you throw tons of hardware at it. We wanted a low footprint remember.</p>
+
+<p>Instead we decided to go with a key/value store. Major pluses were that footprint is relatively low and it performs very fast. Downside was I would not be able to run any sophisticated queries. Since we already have an app that uses memcached to give us <a href="http://blog.vuksan.com/2010/04/20/tracking-web-clients-in-real-time/">real-time view per IP number of accesses</a> we ended up using it for this purpose as well.</p>
+
+<h3 id="implementation">Implementation</h3>
+
+<p>I have been working for a while now with <a href="http://bitbucket.org/maplebed/ganglia-logtailer/">ganglia-logtailer </a>which is a Python framework to crunch log data and submit it to <a href="http://ganglia.info/">Ganglia</a>. There are a number of good pieces from it we could reuse and we did. What we ended up is a two part tool. A Python based log parsing piece and a PHP based web GUI and computation part. Division of “labor” was roughly this</p>
+
+<ul>
+  <li>
+    <p>Python part parses the logs and creates entries/keys where the value in each key represent all the response times observed on a particular server and URL in a particular time period ie. one hour</p>
+  </li>
+  <li>
+    <p>PHP part takes the list once the time period has ended, calculates total time, average time and 90th percentile times and stores computed values in memcache so that retrieval later can be quicker.</p>
+  </li>
+</ul>
+
+<p>Graphing is achieved using simple CSS graphs while time based series are done using <a href="http://sourceforge.net/projects/openflashchart">OpenFlashChart</a>. I did look at <a href="http://www.danvk.org/dygraphs/">Dygraphs </a>for Javascript/DHTML based graphing however couldn’t figure how to plot hourly values. I could only do daily values.</p>
+
+<p>Tool is operational and so far it has led us to the realization that our mobile web pages are overall much slower than their corresponding web pages. This is due to the way we handle mobile ads since most feature phones don’t support Javascript so we have to download the ad which introduces a slight delay. We did figure out that we could use Javascript on Webkit browsers similar to what we do for regular browsers so that should help a bit. We are also chasing some of the other “leads” regarding inconsistent performance for particular pages on some of the servers.</p>
+
+<p>Next steps are to adapt parsing code to work with ganglia-logtailer which would give us real-time reporting. I don’t expect too many problems with that. Also graphing could use some more love. Perhaps I’ll even do standard deviation calculations :-).</p>
+
+<p>Anyways you can download source code from here</p>
+
+<p><a href="http://github.com/vvuksan/pagetime-analyzer">http://github.com/vvuksan/pagetime-analyzer</a></p>
+
+<p>You know what to do :-).</p>
+
+<h2 id="obligatory-screenshots">Obligatory screenshots</h2>
+
+<p>Hourly overview sorted by aggregate time in seconds (you can sort by any column)</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/07/pt_overview.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/07/pt_overview.png" alt="" /></a></p>
+
+<p>This is the average response time (over an hour) for a particular URL on separate server instances</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/07/pt_url_breakdown.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/07/pt_url_breakdown.png" alt="" /></a></p>
+
+<p>Daily view of performance for a particular URL</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/07/pt_graph.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/07/pt_graph.png" alt="" /></a></p>

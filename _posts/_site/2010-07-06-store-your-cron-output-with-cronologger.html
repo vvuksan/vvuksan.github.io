@@ -1,0 +1,29 @@
+<p>For the longest time I have wanted to get rid of dozen or so cron messages I receive every morning about things like DB backups, DB cleanups/vacuums, reporting etc. There are a number of solutions out there to help you manage the cron spam such as <a href="http://habilis.net/cronic/">cronic</a>, <a href="http://web.taranis.org/shush/">shush</a> and <a href="http://www.uow.edu.au/~sah/cronwrap.html">cronwrap</a>. They help by e-mailing you only if there is a problem however don’t store the cron output itself. To get around that issue I have developed cronologger which can be downloaded from</p>
+
+<p><a href="http://github.com/vvuksan/cronologger">http://github.com/vvuksan/cronologger</a></p>
+
+<p>Cronologger is a BASH script that stores all the cron output into a database. I am using <a href="http://couchdb.apache.org/">CouchDB</a> since it is a great document oriented database that allows me to add attachments (blobs) to a document. I assume it would not be hard to use MongoDB, Riak and others.</p>
+
+<p>Some of the benefits of this utility are</p>
+
+<ul>
+  <li>
+    <p>Reduce cron spam</p>
+  </li>
+  <li>
+    <p>Provide the ability to correlate adverse affects by overlaying cron events on e.g. Ganglia graphs</p>
+  </li>
+  <li>
+    <p>Provide a better report of all the batch jobs that ran, diff them with past jobs if they should look the same, etc.</p>
+  </li>
+  <li>
+    <p>Provide the ability to easily view what is currently running on the whole infrastructure ie. job_duration &lt; 0</p>
+  </li>
+  <li>
+    <p>Review historical output</p>
+  </li>
+</ul>
+
+<p>I am still working on web GUI for most of these things. I will gladly accept patches and new contributions.</p>
+
+<p>Tip: To get view a list of documents in a CouchDB database you can use the _utils view e.g. http://localhost:5984/_utils/</p>

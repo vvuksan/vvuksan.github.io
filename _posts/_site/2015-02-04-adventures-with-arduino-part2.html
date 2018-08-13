@@ -1,0 +1,50 @@
+<p>In my last post <a href="/2015/01/01/adventures-with-arduino-part1/">Adventures with Arduino part 1</a> I discussed
+some of the options of wiring up and getting metrics with Arduino. Here is the work in progress</p>
+
+<p><a href="/assets/arduino1.jpg"><img src="/assets/arduino1.jpg" alt="Arduino Wiring image" /></a></p>
+
+<p>It includes a <a href="http://www.adafruit.com/product/386">DHT11</a> humidity temperature sensor,
+<a href="http://www.instructables.com/id/Water-Level-Sensor-Module-for-Arduino-AVR-ARM-STM3/">water sensor</a> and a
+<a href="http://www.adafruit.com/product/375">reid switch</a>. The way things are set up is that it polls the sensors periodically e.g.</p>
+
+<ul>
+  <li>Reid switch (to see if door is open or closed) every 2-10 seconds</li>
+  <li>Humidity and temperature every minute</li>
+</ul>
+
+<p>It then sends those values as a simple comma separated file. Data format I’m using is</p>
+
+<p><code>device uptime,device name,metric_name=value</code></p>
+
+<p>with multiple metric values possibly sent in the same packet. On the receiving side I have a Raspberry
+Pi that follows this work flow.</p>
+
+<ul>
+  <li>Uses a modified raspberryfriends daemon from <a href="https://github.com/riyas-org/nrf24pihub/">nrf24pihub</a></li>
+  <li>Daemon receives and parses the payload and ships it off to <a href="https://github.com/sivy/pystatsd/">Statsd</a> - using a gauge data type</li>
+  <li>Statsd rolls up any metrics and sends them over to <a href="http://ganglia.info">Ganglia</a>. Ganglia is used for trending
+  and data collection e.g. this shows temperature and humidity in one of my bedrooms. You can notice the effect of a
+  room humidifer on humidity in the room :-)</li>
+</ul>
+
+<p><a href="/assets/arduino_humidity_temperature.png"><img src="/assets/arduino_humidity_temperature.png" alt="Arduino metrics" /></a></p>
+
+<ul>
+  <li>I can also see if I left my garage door open :-)</li>
+</ul>
+
+<p><a href="/assets/garage_door.png"><img src="/assets/garage_door.png" alt="Arduino metrics" /></a></p>
+
+<ul>
+  <li>In addition I have set up alerting using <a href="https://github.com/ganglia/ganglia-web/wiki/Nagios-Integration">Nagios/Ganglia integration</a>
+  and <a href="http://www.opsgenie.com/">OpsGenie</a> which alerts me if I leave my garage door open</li>
+</ul>
+
+<p><a href="/assets/garage_door_alerts.png"><img src="/assets/garage_door_alerts.png" alt="Arduino metrics" /></a></p>
+
+<ul>
+  <li>In this particular instance that alert has dual meaning since this particular Arduino is driven by one of those “lip-stick” USB battery packs
+  and Ganglia will expire a particular metric if it hasn’t been reported for a defined amount of time (in my case 1 minute).
+  In this particular case alert state UNKNOWN tells me that most likely battery is out I need to recharge it.</li>
+</ul>
+

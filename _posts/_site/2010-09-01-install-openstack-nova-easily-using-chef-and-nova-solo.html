@@ -1,0 +1,30 @@
+<p>Inspired by <a href="http://github.com/cloudscaling/swift-solo">Cloudscaling’s Swift-Solo</a> and being excited about being able to create my own cloud I am announcing the Nova-Solo project. <a href="http://openstack.org/">Openstack</a> Nova is the Compute portion of the project trying to build open source stack to run Amazon EC2 type service. Nova-Solo is a set of <a href="http://Opscode.com/chef/">Opscode Chef</a> recipes that allow you to quickly get most parts of the Nova stack up and running. You can fetch it from Github at</p>
+
+<p><a href="http://github.com/vvuksan/nova-solo">http://github.com/vvuksan/nova-solo</a></p>
+
+<p>At this time Nova-Solo is targeted for Ubuntu 10.04 and it relies on <a href="https://wiki.ubuntu.com/SorenHansen">Soren Hansen’s</a> package repository to install all of the necessary packages. Following Nova services are installed</p>
+
+<ul>
+  <li>
+    <p>Cloud controller</p>
+  </li>
+  <li>
+    <p>Object store</p>
+  </li>
+  <li>
+    <p>Volume store</p>
+  </li>
+  <li>
+    <p>API server</p>
+  </li>
+  <li>
+    <p>Compute Server</p>
+  </li>
+</ul>
+
+<p>Soren’s package archive is a bit outdated so some of the things don’t work. For example you can create users, generate credentials, upload files into buckets but you can’t register the image. Soren has said he is in the process of building new packages and I am also in the process of doing the same so hopefully things improve quickly. Nova code is definitely alphaish so beware. To get started use git to clone the nova-solo repository and off you go</p>
+
+<pre><code>git clone git://github.com/vvuksan/nova-solo.git
+</code></pre>
+
+<p>In the future as things stabilize we’ll be making adjustments to support multiple compute servers (pieces for it are already in Nova-Solo), support other distributions like RHEL/Centos, etc.</p>

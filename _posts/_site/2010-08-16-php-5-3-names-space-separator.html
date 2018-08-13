@@ -1,0 +1,16 @@
+<p>I am posting this to help others that may encounter a similar problem.</p>
+
+<p>I have been doing some PHP development recently using <a href="http://github.com/nrk/predis/">Predis</a>, a PHP <a href="http://code.google.com/p/redis/">Redis</a> library. While instantiating the Redis\Client object I get</p>
+
+<pre><code>Warning: Unexpected character in input:  '\' (ASCII=92) state=1 in .....
+</code></pre>
+
+<p>Problem was explained in this issue</p>
+
+<p><a href="http://github.com/nrk/predis/issues/closed#issue/11">http://github.com/nrk/predis/issues/closed#issue/11</a></p>
+
+<p>If you are still running on PHP 5.2 you should use the backported  version of Predis and not the mainline library which targets only PHP  &gt;= 5.3 (the <em><strong>backslash is the namespace separator</strong></em> in PHP 5.3).</p>
+
+<p>More discussion of this change can be found here.</p>
+
+<p><a href="http://giorgiosironi.blogspot.com/2009/09/introspection-of-php-namespaces.html">http://giorgiosironi.blogspot.com/2009/09/introspection-of-php-namespaces.html</a></p>

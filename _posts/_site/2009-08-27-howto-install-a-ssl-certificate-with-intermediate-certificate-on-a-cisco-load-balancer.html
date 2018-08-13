@@ -1,0 +1,43 @@
+<p>This is a common problem across many different platforms. You generate a CSR, get a certificate but forget or don’t realize that besides installing the signed certificate you need to install the CA (Certificate Authority) Intermediate certificate. As a result some of the older browsers may complain about an invalid certificate or Java code will fail with following error message</p>
+
+<p>Exception in thread “main” javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path validation failed: java.security.cert.CertPathValidatorException: CA key usage check failed: keyCertSign bit is not set</p>
+
+<p>Solution is to download the intermediate certificate from the CA e.g. Verisign and GoDaddy and include it with the certificate. For instance in Apache you need to include <strong>SSLCertificateChainFile</strong> directive with the path to the intermediate certificate. On Cisco loadbalancer you would need to use <a href="http://docwiki.cisco.com/wiki/SSL_Termination_on_the_Cisco_Application_Control_Engine_Using_an_Existing_Chained_Certificate_and_Key_in_Routed_Mode_Configuration_Example">following Cisco document</a>. Specifically this directive</p>
+
+<pre><code>ACE-1/routed(config)# crypto chaingroup intermed-1
+ACE-1/routed(config-chaingroup)# cert intermediate.pem
+</code></pre>
+
+<p>The chaingroup needs to be applied to the ssl-proxy service in addition to the already configured certificate and key.</p>
+
+<pre><code>ACE-1/routed(config)# ssl-proxy service proxy-1
+ACE-1/routed(config-ssl-proxy)# chaingroup intermed-1
+</code></pre>
+
+<p>If you got your certificate from Verisign you can check whether you installed it properly here</p>
+
+<p><a href="https://knowledge.verisign.com/support/ssl-certificates-support/index?page=content&amp;actp=CROSSLINK&amp;id=ar1130">https://knowledge.verisign.com/support/ssl-certificates-support/index?page=content&amp;actp=CROSSLINK&amp;id=ar1130</a></p>
+
+<p>You can always of course misconfigure things causing lots of time to be wasted. For instance on one occasion a well known managed hosting provider that was in charge of configuring the Cisco load balancer configured the load balancer as follows</p>
+
+<pre><code>crypto chaingroup some.domain.com
+   cert some.domain.com.cert
+   cert intermediate.cert
+ssl-proxy service vip-1.2.3.4-ps
+   key some.domain-com.key
+   cert some.domain.com.cert
+   chaingroup some.domain.com
+   ssl advanced-options ssl-parameter-map-1
+</code></pre>
+
+<p>This is incorrect as the server certificate SHOULD NOT be included in the intermediate certificate chain. Otherwise the helpful Verisign test applet will complain with following message.</p>
+
+<p>Two certificates were found with the same common name. The certificate installation checker cannot determine which is the correct certificate for the Web server. Remove the incorrect certificate and then test again.</p>
+
+<p>Most browsers will work correctly however Java code will exhibit errors from the top of the article. Solution for the above problem is this</p>
+
+<pre><code>crypto chaingroup verisign-intermediate
+  cert intermediate.cert
+</code></pre>
+
+<p>Then included that chaingroup in the ssl-proxy directive. Once that was done the issue went away. Hope this saves someone some debugging time.</p>

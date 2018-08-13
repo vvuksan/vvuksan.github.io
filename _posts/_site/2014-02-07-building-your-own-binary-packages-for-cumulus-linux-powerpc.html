@@ -1,0 +1,66 @@
+<p><a href="http://cumulusnetworks.com/">Cumulus Networks</a>  is a new entrant in the network gear space. What separates them from other players is that they are not selling hardware but their own network focused Linux distribution called Cumulus Linux. Basically you buy a switch from one of their resellers or ODMs then pay Cumulus a yearly support license. There are a number of interesting things you can do like run your own code on the switch as well as use common Linux commands to configure the switch e.g. brctl, ports are exposed as Linux network interfaces etc.</p>
+
+<p>One of the first things we ended up doing is installing <a href="http://ganglia.info/">Ganglia agent</a> so that we can monitor what’s going on on the switch. Cumulus switch we had was running a PowerPC based control plane so that made things a bit tricky since we couldn’t use any of the amd64 built packages. One way to build PowerPC packages would be to get an old PowerPC based Mac and install Linux on it. Unfortunately that seemed like a lot of work and overkill. I realized we could just use <a href="http://http://wiki.qemu.org/Main_Page">Qemu </a>which is an Open Source machine emulator so I could run PowerPC machine on my own laptop :-). Quickest way to get up and running is as follows.</p>
+
+<p>On Ubuntu you will need to install following packages</p>
+
+<p>apt-get install qemu-system-ppc openbios-ppc qemu-utils</p>
+
+<p><strong>Warning</strong>: Under at least Ubuntu 13.10 openbios-ppc doesn’t seem to work well. If you get a blank yellow screen after you start the install you will need to get openbios from other places e.g. <a href="https://github.com/qemu/qemu/tree/master/pc-bios">https://github.com/qemu/qemu/tree/master/pc-bios</a></p>
+
+<p>Once you get those you will need to download Debian Squeeze for PowerPC. You will need to download</p>
+
+<ul>
+  <li>
+    <p>vmlinux</p>
+  </li>
+  <li>
+    <p>initrd.gz</p>
+  </li>
+</ul>
+
+<p>from</p>
+
+<p><a href="http://ftp.debian.org/debian/dists/squeeze/main/installer-powerpc/current/images/powerpc64/netboot/">http://ftp.debian.org/debian/dists/squeeze/main/installer-powerpc/current/images/powerpc64/netboot/</a></p>
+
+<p>as well as the netboot image e.g.</p>
+
+<p><a href="http://cdimage.debian.org/cdimage/archive/6.0.8/powerpc/iso-cd/debian-6.0.8-powerpc-netinst.iso">http://cdimage.debian.org/cdimage/archive/6.0.8/powerpc/iso-cd/debian-6.0.8-powerpc-netinst.iso</a></p>
+
+<p>Reason why you need initrd.gz and vmlinux is that if you try to do an install straight off the CD-ROM your install will hang here</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2014/02/powerpc_install.png"><img src="http://blog.vuksan.com/wp-content/uploads/2014/02/powerpc_install.png" alt="Power PC install QEMU" /></a></p>
+
+<p>Once you have those pieces initiate the install with</p>
+
+<pre><code>qemu-img create -f qcow2 squeeze-powerpc.img 10G
+sudo qemu-system-ppc -m 256 -kernel vmlinux \
+ -cdrom debian-6.0.8-powerpc-netinst.iso \
+          -initrd initrd.gz -hda squeeze-powerpc.img -boot d -append "root=/dev/ram" \
+          -net nic,macaddr=00:16:3e:00:00:02 -net tap
+</code></pre>
+
+<p>Now follow the installation process as you would if you were installing Debian or Ubuntu from scratch. When you are done with the install shut down the emulator. Now to invoke your PowerPC emulator execute</p>
+
+<pre><code>sudo qemu-system-ppc -m 256 -hda squeeze-powerpc.img  \
+           -net nic,macaddr=00:16:3e:00:00:02 -net tap
+</code></pre>
+
+<p>Congratulations you are done. What you end up with is this</p>
+
+<pre><code>root@debian:~# cat /proc/cpuinfo 
+processor    : 0
+cpu        : 740/750
+temperature     : 62-64 C (uncalibrated)
+revision    : 3.1 (pvr 0008 0301)
+bogomips    : 33.14
+timebase    : 16570400
+platform    : PowerMac
+model        : Power Macintosh
+machine        : Power Macintosh
+motherboard    : AAPL,PowerMac G3 MacRISC
+detected as    : 49 (PowerMac G3 (Silk))
+pmac flags    : 00000000
+pmac-generation    : OldWorld
+Memory        : 256 MB
+</code></pre>

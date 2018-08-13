@@ -1,2 +1,0 @@
-# vvuksan.github.io
-Blog

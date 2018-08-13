@@ -1,0 +1,32 @@
+<p>I was talking to my buddy Jeff Buchbinder and he mentioned that he recently added following to mySQL in order to reduce mySQL replication breakages</p>
+
+<pre><code>slave-skip-errors=1062,1053,1146,1051,1050
+</code></pre>
+
+<p>What this does is not stop replication in case following errors are encountered</p>
+
+<p>Error: <code>1050</code> SQLSTATE: <code>42S01</code> (<a href="http://dev.mysql.com/doc/refman/5.0/en/error-messages-server.html#error_er_table_exists_error"><code>ER_TABLE_EXISTS_ERROR</code></a>)</p>
+
+<p>Message: Table ‘%s’ already exists</p>
+
+<p>Error: <code>1051</code> SQLSTATE: <code>42S02</code> (<a href="http://dev.mysql.com/doc/refman/5.0/en/error-messages-server.html#error_er_bad_table_error"><code>ER_BAD_TABLE_ERROR</code></a>)</p>
+
+<p>Message: Unknown table ‘%s’</p>
+
+<p>Error: <code>1053</code> SQLSTATE: <code>08S01</code> (<a href="http://dev.mysql.com/doc/refman/5.0/en/error-messages-server.html#error_er_server_shutdown"><code>ER_SERVER_SHUTDOWN</code></a>)</p>
+
+<p>Message: Server shutdown in progress</p>
+
+<p>Error: <code>1062</code> SQLSTATE: <code>23000</code> (<a href="http://dev.mysql.com/doc/refman/5.0/en/error-messages-server.html#error_er_dup_entry"><code>ER_DUP_ENTRY</code></a>)</p>
+
+<p>Message: Duplicate entry ‘%s’ for key %d</p>
+
+<p>Error: <code>1146</code> SQLSTATE: <code>42S02</code> (<a href="http://dev.mysql.com/doc/refman/5.0/en/error-messages-server.html#error_er_no_such_table"><code>ER_NO_SUCH_TABLE</code></a>)</p>
+
+<p>Message: Table ‘%s.%s’ doesn’t exist</p>
+
+<p>This will avoid the very common primary key collisions and “temporary tables aren’t there” problems. Writing this down for posterity. Use with caution.</p>
+
+<p>Marius Ducea has a post about it as well</p>
+
+<p><a href="http://www.ducea.com/2008/02/13/mysql-skip-duplicate-replication-errors/">http://www.ducea.com/2008/02/13/mysql-skip-duplicate-replication-errors/</a></p>

@@ -1,0 +1,149 @@
+<p>I have been a long time fan of Ganglia. Ganglia is a scalable distributed monitoring system initially developed for high-performance computing systems such as clusters and Grids. Today Ganglia is being used by some of the largest web properties such as Facebook, Twitter, Etsy, etc. as well as tons of smaller organizations. Some of Ganglia benefits are</p>
+
+<ul>
+  <li>
+    <p>Push based metrics ie. a lightweight agent on hosts that need to be monitored</p>
+  </li>
+  <li>
+    <p>Lots of basic metrics by default such as load, cpu utilization, memory utilization</p>
+  </li>
+  <li>
+    <p>Trivial to add new metrics ie. execute the gmetric command with metric value and graph automatically shows up</p>
+  </li>
+  <li>
+    <p>Decent web interface that allows you to easily drill down when troubleshooting problems</p>
+  </li>
+</ul>
+
+<p>I have used other monitoring systems such as Cacti, Zenoss and Zabbix and found them lacking since they were overly complicated, hard to configure and customize. That said I have also had misgivings about certain parts of the Ganglia UI. Specifically what I missed were following features</p>
+
+<ol>
+  <li>
+    <p>Ability to search hosts and metrics - looking for specific host or metric gets cumbersome even on clusters with 20-30 hosts</p>
+  </li>
+  <li>
+    <p>Ability to create arbitrary groupings of host metrics on one page ie. a page with web response time for each web server and mySQL lock time would be something you’d have to write custom code for</p>
+  </li>
+  <li>
+    <p>Easy way to create custom graphs ie. either aggregate line graphs or stacked graphs</p>
+  </li>
+  <li>
+    <p>Easy way to add custom graphs to either clusters or hosts ie. I have a stacked Apache report showing number of GETs vs. POSTs. It’s hard or impossible to show that graph only on webservers but not on mySQL servers.</p>
+  </li>
+  <li>
+    <p>Mobile (WebKit) optimized experience - minimize zooming/panning etc.</p>
+  </li>
+</ol>
+
+<p>Couple months ago on #ganglia Freenode IRC channel we were discussing some of the pitfalls of the UI and the idea of rewriting Ganglia UI was born. As I have been doing quite a bit of work with jQuery in months past I decided to to give it a shot.</p>
+
+<h2 id="goals">Goals</h2>
+
+<p>My initial goals were</p>
+
+<ol>
+  <li>
+    <p>Implement basic search functionality ie. one search term that will show matching hosts and metrics</p>
+  </li>
+  <li>
+    <p>Add a way to add “optional” graphs on per cluster/per host basis ie. have a default set of graphs and allow those to be overriden using cluster or host override config files</p>
+  </li>
+  <li>
+    <p>Add Views ie. ability to group host/metrics</p>
+  </li>
+  <li>
+    <p>Add Mobile/Webkit View</p>
+  </li>
+  <li>
+    <p>Store view and optional graphs config information in a format that can be easily manipulated by web UI, config management system or by hand - this is one of the key omissions in most monitoring setups where adding/removing hosts requires either manual intervention or kludgy hacks. As someone who has had to spend hours manually clicking around Zabbix interface whenever we added a new server this had major importance</p>
+  </li>
+</ol>
+
+<h2 id="implementation">Implementation</h2>
+
+<p>Initially there was an idea to rebuild the whole interface from scratch which we still may do but I decided that that would be too much work especially since I wasn’t absolutely sure whether my intended changes would make sense for most people. Thus I decided to modify the existing UI.</p>
+
+<p>So far these are the features that have been implemented</p>
+
+<h3 id="visual-aides">Visual aides</h3>
+
+<p>In cluster view next to each host now you’ll see the full hostname in text on top of the graph. Same goes for metric names  in host view. Now even if you have hundreds of metrics you can click CTRL-F in your browser and find the metric quickly. Also there is a hidden anchor next to each metric which is used by the search tab.</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_visual_aides1.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_visual_aides1.png" alt="" /></a></p>
+
+<p>Doesn’t seem like much until you need it :-).</p>
+
+<h3 id="search">Search</h3>
+
+<p>Search tab allows you to type in a single term which will match hosts and metrics. It will search as you type. Hosts first, metrics on host second. Clicking on hosts opens a new window with the view of the host. Clicking on a particular metric takes you to the metric in question.</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_search.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_search.png" alt="" /></a></p>
+
+<h3 id="views">Views</h3>
+
+<p>Views are defined using JSON configuration files. One JSON file per view. There are two types of views, standard and regex views. For example standard view will look like this</p>
+
+<pre><code>{  "view_name":"default",
+   "items":[
+      {"hostname":"host1.domain.com","graph":"cpu_report"},
+      {"hostname":"host2.domain.com","graph":"apache_report"}
+    ],
+    "view_type":"standard"
+}
+</code></pre>
+
+<p>It will group cpu report from host1 and apache_report for host2. Regex view allows you to use regular expressions to define hosts (soon also metrics) ie. you want to group all hosts that have imap, amavis or smtp in their names. That view definition would look something like this</p>
+
+<pre><code>{  "view_name":"mailservers",
+    "items":[
+      {"hostname":"(imap|amavis|smtp)", "graph":"cpu_report"}
+    ],
+    "view_type":"regex"}
+</code></pre>
+
+<p>If you don’t want to edit JSON config files by hand you can use the UI to create standard views ie. first create a view then as you browse hosts there is a plus sign next to each graph. Clicking on it displays a dialog which allows you to add that particular host/metric to a view e.g.</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_add_metric_to_view.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_add_metric_to_view.png" alt="" /></a></p>
+
+<h3 id="automatic-rotation">Automatic rotation</h3>
+
+<p>Allows you to automatically rotate a view. It is an integration of <a href="http://blog.vuksan.com/2010/06/16/gangliaview-automatically-rotate-ganglia-metrics/">GangliaView</a> with Views. What’s especially nice is that if you have multiple monitors you can open up separate browser windows and select different views to rotate.</p>
+
+<h3 id="mobile-view">Mobile view</h3>
+
+<p>There is a functional mobile view which provides mobile view of Views, Clusters and Search ie. there is very little panning or zooming. Also we are using lots of preloading ie. first page you open contains lots of hidden sub-pages in order to save on having to do subsequent requests.</p>
+
+<p>You can view some of the <a href="http://www.flickr.com/photos/51166390@N05/sets/72157625551485278/">screenshots </a>on Flickr.</p>
+
+<h3 id="optional-graphs">Optional Graphs</h3>
+
+<p>You can specify which optional graphs you want displayed for each host or cluster. Similar to views these are configured via JSON config files e.g. this is the default list of graphs</p>
+
+<pre><code>{
+	"included_reports": ["load_report","mem_report","cpu_report","network_report","packet_report"]
+}
+</code></pre>
+
+<p>You can exclude any of the default included graphs or include ones you want e.g.</p>
+
+<p><a href="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_edit_optional_graphs.png"><img src="http://blog.vuksan.com/wp-content/uploads/2010/12/ganglia_edit_optional_graphs.png" alt="" /></a></p>
+
+<h3 id="screencast">Screencast</h3>
+
+<p>If you would like to see some of these features in action you can look at <a href="http://vuksan.com/ganglia-ui.html">these screencasts</a>.</p>
+
+<h3 id="download">Download</h3>
+
+<p>Ready to try ? Wait no more and check it out from SVN at</p>
+
+<p><a href="http://ganglia.svn.sourceforge.net/svnroot/ganglia/branches/monitor-web-2.0/">http://ganglia.svn.sourceforge.net/svnroot/ganglia/branches/monitor-web-2.0/ </a></p>
+
+<p><strong>Future</strong></p>
+
+<p>In the future we are looking into polishing the Graphite/Ganglia integration (perhaps about that in a next post), add integrations with e.g. Nagios (you can see a hint of it in the add metric to view screenshot above), Logstash. Also another upcoming feature will be aggregate metrics and quick views. Full TODO list can be found here</p>
+
+<p><a href="http://sourceforge.net/apps/trac/ganglia/browser/branches/monitor-web-2.0/TODO">http://sourceforge.net/apps/trac/ganglia/browser/branches/monitor-web-2.0/TODO</a></p>
+
+<h3 id="acknowledgements">Acknowledgements</h3>
+
+<p>I’d like to thank Erik Kastner for helping on the Graphite/Ganglia integration. Ben Hartshorne for test driving the UI and providing a number of good suggestions/ideas.</p>

@@ -1,0 +1,27 @@
+<p>I have to infrequently add new drives to Dell RAID arrays like H700. For some reason it takes me couple searches to find the info so here so I can find it later.</p>
+
+<p><strong>List all drives</strong></p>
+
+<pre><code>/opt/MegaRAID/MegaCli/MegaCli64 -PDList -aALL
+</code></pre>
+
+<p><strong>Create a RAID array (e.g. RAID 0)</strong></p>
+
+<pre><code>/opt/MegaRAID/MegaCli/MegaCli64 -CfgLdAdd -r0 [32:4, 32:5] -aALL
+</code></pre>
+
+<p><strong>List working RAID arrays</strong></p>
+
+<pre><code>/opt/MegaRAID/MegaCli/MegaCli64 -LDInfo -Lall -aALL
+</code></pre>
+
+<p>Confirm you got the right RAID array e.g. Virtual Disk 1</p>
+
+<pre><code>/opt/MegaRAID/MegaCli/MegaCli64 -LDInfo -L1 -aALL
+</code></pre>
+
+<p><strong>Delete RAID array</strong></p>
+
+<pre><code>/opt/MegaRAID/MegaCli/MegaCli64 -CfgLdDel -L1 -aALL
+</code></pre>
+

@@ -1,0 +1,13 @@
+<p>Recently I got a report that some pages on the site were extremely slow. Looking at the web server metrics didn’t show anything new however mySQL DB metrics showed a definite change</p>
+
+<p><img src="http://blog.vuksan.com/wp-content/uploads/2009/10/mysqlcpu.png" alt="MySQL server CPU utilization" /></p>
+
+<p>ie. at the end of Week 38 there is an increase in CPU utilization. Nearly 60% increase. Interestingly enough there was a new software release at the end of Week 38 which pointed to either a bug or a new feature. Luckily I have been collecting mySQL metrics <a href="http://vuksan.com/linux/ganglia/#mySQL_server_stats">using this gmetric script</a>. This led me to these two graphs</p>
+
+<p><img src="http://blog.vuksan.com/wp-content/uploads/2009/10/mysqlupdate.png" alt="mysqlupdate" /></p>
+
+<p><img src="http://blog.vuksan.com/wp-content/uploads/2009/10/mysqlinsert.png" alt="mysqlinsert" /></p>
+
+<p>So nearly double number of inserts and nearly triple the updates. Using mysqlbinlog I analyzed the update and insert statements and was able to identify the two culprit INSERT and UPDATE statements then sent it off to developers.</p>
+
+<p>I also observed that had I watched the binary log growth I may have identified this earlier since there were a lot more binary logs for the period since the release. Thus <a href="http://vuksan.com/linux/ganglia/#mySQL_binary_log_growth_rate">mysql average binary log growth rate gmetric</a> was born :-). Now all I need to do is find out what normal growth rate is and if it goes outside of that norm use Nagios to send me a non-urgent alert.</p>

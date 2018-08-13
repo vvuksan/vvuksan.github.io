@@ -1,0 +1,31 @@
+<p>I have recently moved this blog to be hosted on <a href="http://www.fastly.com/">Fastly</a>, a CDN service with bunch of great features like dynamic content caching with instant purges. Fastly utilizes HTTP headers to determine what to cache as described in the <a href="http://www.fastly.com/docs/tutorials#cache_control">Cache Control document</a>. While configuring my service I noticed that my Wordpress (origin server) kept returning HTTP headers like these</p>
+
+<pre><code>Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+</code></pre>
+
+<p>I looked through the Wordpress code and couldn’t see where such value was set. After some internet searches I discovered that they are set using session-cache-limiter option in php.ini. In most distributions this defaults to nocache which ends up with above headers. You can read more on the cache-limiter options here.</p>
+
+<p><a href="http://www.php.net/manual/en/function.session-cache-limiter.php">http://www.php.net/manual/en/function.session-cache-limiter.php</a></p>
+
+<p>What we need is session-cache-limiter = public results in headers like these</p>
+
+<pre><code>Expires: (sometime in the future, according session.cache_expire)
+Cache-Control: public, max-age=(sometime in the future, according to session.cache_expire)
+Last-Modified: (the timestamp of when the session was last saved)
+</code></pre>
+
+<p>e.g.</p>
+
+<pre><code>Expires: Tue, 22 May 2012 16:38:33 GMT
+Cache-Control: public, max-age=10800
+Last-Modified: Tue, 04 Oct 2005 00:55:59 GMT
+</code></pre>
+
+<p>If you want to adjust the max-age you can set cache-expire in php.ini e.g.</p>
+
+<pre><code>; http://php.net/session.cache-expire
+session.cache_expire = 180
+</code></pre>
+

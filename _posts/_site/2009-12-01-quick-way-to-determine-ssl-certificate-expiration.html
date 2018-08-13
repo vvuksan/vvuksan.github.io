@@ -1,0 +1,17 @@
+<p>If you need a quick way to determine when a certain SSL certificate expires you can utilize following approaches. In both examples server I am trying to check is called webserver.domain.com.</p>
+
+<p>If you have Nagios plugins installed you could type</p>
+
+<pre><code># /usr/lib/nagios/plugins/check_http -p 443 -S -C 15 webserver.domain.com
+CRITICAL - Certificate expired on 11/01/2009 11:23.
+</code></pre>
+
+<p>That’s easy. However what if you don’t have Nagios plugins. In that case you can do the same with OpenSSL and s_client. Look for notAfter field.</p>
+
+<pre><code># echo | openssl s_client -connect webserver.domain.com:443 | openssl x509 -noout -dates
+...
+notBefore=Nov  1 11:23:30 2008 GMT
+notAfter=Nov  1 11:23:30 2009 GMT
+</code></pre>
+
+<p>Easy :-).</p>

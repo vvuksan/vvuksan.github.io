@@ -1,0 +1,76 @@
+<p><a href="http://en.oreilly.com/velocity2010/">Velocity 2010</a> was an excellent conference. Following are my takeways from the conference. There is tons more but following are some of the things that made a good impression and are likely not hard to do</p>
+
+<h3 id="web-performance-optimization">Web performance optimization</h3>
+
+<ul>
+  <li>
+    <p>Look at your Javascript. That is one of the major reasons for page slowness since Javascript download and parsing blocks other elements of the page to be loaded. Use <a href="http://code.google.com/closure/compiler/">Google’s Closure Compiler</a> to optimize Javascript by merging code and eliminating duplicate or unneeded functions. Check out <a href="http://www.monkey.org/~annie/ProgressiveEnhancement.html">Anne Sullivan’s Progressive Enhancement slides</a>.</p>
+  </li>
+  <li>
+    <p>Yahoo release Boomerang which they describe as a piece of javascript that you add to your web pages, where it measures the performance of your website from your end user’s point of view. It has the ability to send this data back to your server for further analysis.More details at <a href="http://github.com/yahoo/boomerang">http://github.com/yahoo/boomerang</a></p>
+  </li>
+  <li>
+    <p>Version your CSS/Javascript and set expire times for 10+ years. Check out slide 24 from <a href="http://www.slideshare.net/postwait/velocity-2010-scalable-internet-architectures">Theo Schlossnagle Scalable Internet Architectures slides</a>.</p>
+  </li>
+  <li>
+    <p>Use Cookies as a “distributed database”. If you are concerned about security or tampering encrypt the cookies.</p>
+  </li>
+  <li>
+    <p>Use JQuery sparingly. It takes 200-300 ms to parse it. This is even worse in the mobile world.</p>
+  </li>
+  <li>
+    <p>Google rewrote their show_ads.js with ASWIFT which causes script loading to be asynchronous and not block other elements from loading. More about “<a href="http://en.oreilly.com/velocity2010/public/schedule/detail/15412">Don’t Let Third Parties slow you down</a>” and  <a href="http://www.royans.net/arch/speeding-up-3rd-party-widgets-using-iframes/">http://www.royans.net/arch/speeding-up-3rd-party-widgets-using-iframes/</a></p>
+  </li>
+</ul>
+
+<h3 id="mobile-performance-optimization">Mobile performance optimization</h3>
+
+<p>Most of the recommendations have been taken off <a href="http://firt.mobi/">Maximiliano Firtman</a>’s Mobile Web High Performance. You can <a href="http://www.mobilexweb.com/blog/mobile-web-high-performance">view slides here</a>.</p>
+
+<ul>
+  <li>
+    <p>Avoid JQuery unless you really need it. Check out slide 90. It takes 1.8 seconds on iPhone and 4 seconds on Android to download and parse JQuery. Use mobile optimized frameworks such as baseJS and XUI</p>
+  </li>
+  <li>
+    <p>Avoid DNS lookups and minimize number of requests since they are slow</p>
+  </li>
+  <li>
+    <p>Embed CSS and Javascript on the home page. After onload download external CSS and JS.</p>
+  </li>
+  <li>
+    <p>Use inline images (slide 56) and <a href="http://pukupi.com/post/1964">pictograms</a></p>
+  </li>
+  <li>
+    <p>Avoid redirects</p>
+  </li>
+  <li>
+    <p>Use native constructs especially for Webkit browsers e.g. -webkit-text-stroke</p>
+  </li>
+  <li>
+    <p>Keynote announced their Mobile Testing tool for desktops that looks promising <a href="http://mite.keynote.com/">http://mite.keynote.com/</a></p>
+  </li>
+</ul>
+
+<h3 id="sslsecurity">SSL/Security</h3>
+
+<ul>
+  <li>
+    <p>According to <a href="http://en.oreilly.com/velocity2010/public/schedule/detail/14217">Google SSL</a> overhead these days is pretty minimal. Around 1% on today’s servers.</p>
+  </li>
+  <li>
+    <p>Pet peeve about the presentation is they were advising everyone to use less secure key lengths ie. 1024 bits and RC4 cipher to improve performance. It is true that adding SSL to insecure connections is certainly an improvement but it should be qualified. E-mail probably fine. Financial sites probably bad.</p>
+  </li>
+</ul>
+
+<h3 id="scalability">Scalability</h3>
+
+<ul>
+  <li><a href="http://en.oreilly.com/velocity2010/public/schedule/detail/13046">Hidden Scalability Gotchas in Memcached and Friends</a> by Neil Gunther (author of Guerilla Capacity Planning) and Shanti Subramanyam discussed their findings around memcached. They used quantitative analysis to analyze different memcache versions. Based on their analysis using Neil’s model memcache 1.4.5 has higher contention than 1.2.8.</li>
+</ul>
+
+<h3 id="culture">Culture</h3>
+
+<ul>
+  <li>Thoroughly enjoyed John Rauser’s <a href="http://en.oreilly.com/velocity2010/public/schedule/detail/11793">Creating Cultural Change</a></li>
+</ul>
+

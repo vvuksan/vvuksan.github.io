@@ -1,0 +1,47 @@
+<p>This is a quick recipe on how to create a Redhat/CentOS KVM image on Ubuntu 9.10 (karmic). First make sure you have Virtualization (VT) turned on. For example Dell laptops will have it disabled by default. Go into BIOS and enable it. To check whether it is turned on run</p>
+
+<pre><code>egrep '(vmx|svm)' /proc/cpuinfo
+</code></pre>
+
+<p>If this comes out empty VT is not enabled and KVM will not work.</p>
+
+<p>Install kvm packages</p>
+
+<pre><code>sudo apt-get install qemu-kvm
+</code></pre>
+
+<p>Edit /etc/qemu-ifup to add <strong>virbr0</strong> as the bridge to which KVM guest should attach itself. Comment out line below and add lines below e.g.</p>
+
+<pre><code>#/usr/sbin/brctl addif ${switch} $1
+/usr/sbin/brctl addif virbr0 $1
+</code></pre>
+
+<p>Same change needs to be done in /etc/qemu-ifdown ie.</p>
+
+<pre><code>#/usr/sbin/brctl delif ${switch} $1
+/usr/sbin/brctl delif virbr0 $1
+</code></pre>
+
+<p>Download CentOS 5.4 Boot ISO image e.g.</p>
+
+<pre><code>wget http://www.gtlib.gatech.edu/pub/centos/5.4/isos/x86_64/CentOS-5.4-x86_64-netinstall.iso
+</code></pre>
+
+<p>Create an empty image (last argument is the image size)</p>
+
+<pre><code>kvm-img create -f qcow2 centos5.img 10G
+</code></pre>
+
+<p>Launch install (-m is memory size)</p>
+
+<pre><code>sudo kvm -hda centos5.img -cdrom boot.iso -m 512 -boot d \
+       -net nic,vlan=0,model=e1000,macaddr=00:16:3e:de:00:01 -net tap
+</code></pre>
+
+<p>Install CentOS however you like. When you are done your CentOS install will reboot and try to boot off the CD-ROM. At this point shut down the KVM guest by closing the window. To run it remove the cdrom references and boot option e.g.</p>
+
+<pre><code>sudo kvm -hda centos5.img -m 512 \
+       -net nic,vlan=0,model=e1000,macaddr=00:16:3e:de:00:01 -net tap
+</code></pre>
+
+<p>Note: I am setting a fixed MAC address. You can leave it off and it will be generated randomly every time you start up kvm instance.</p>
