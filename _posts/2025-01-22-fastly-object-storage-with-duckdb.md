@@ -13,7 +13,7 @@ tags:
 DuckDB allows direct querying/importing of data from HTTP endpoints including S3 compatible storages. The `httpfs extension` currently lacks
 direct support for [Fastly Object Storage](https://www.fastly.com/products/storage) however as it is S3 compatible all you need to do is 
 modify the S3 type to support it. The only two changes are 
-  * *ENDPOINT* needs to point to the Fastly endpoint for the region you want to use e.g eu-central.object.fastlystorage.app
+  * *ENDPOINT* needs to point to the Fastly endpoint for the region you want to use e.g `eu-central.object.fastlystorage.app`
   * *URL_STYLE* needs to use `path`
 
 For example I have a bucket in `us-east` region and my config looks as follows.
